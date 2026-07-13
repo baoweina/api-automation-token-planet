@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE / tooling
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Environment
+.env
+.env.local
+
+# Allure reports
+reports/allure-results/
+reports/allure-report/
+
+# OpenAPI 文档缓存：体积大（~1MB）且会完整暴露被测系统内部接口结构，
+# 不提交到仓库，首次使用用 openapi/fetch_openapi.py 现场拉取
+openapi/wali_openapi.json
