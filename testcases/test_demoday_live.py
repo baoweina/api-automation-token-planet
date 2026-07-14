@@ -3,7 +3,7 @@
 已实测确认：该接口是真正强制校验登录态的接口（不同于 login/发验证码接口），
 未携带 Authorization 时，无论请求体是否合法，都会先返回 2113 unauthorized access，
 即鉴权检查在参数校验之前；但如果显式传了违反 pageSize 边界的值，会先被参数校验拦住
-（返回 2110，文案复用了“登录信息已过期”，实际含义是参数非法，不要被文案误导）。
+（返回 2110，文案复用了"登录信息已过期"，实际含义是参数非法，不要被文案误导）。
 
 - 不依赖登录态、可无人值守稳定运行的场景：未登录访问、非法 Token
 - 分页参数边界值、成功场景等，都需要 authed_client（AUTH_TOKEN 未配置时自动 skip）
@@ -60,6 +60,8 @@ class TestDemodayLiveNegative:
     @allure.title("即使参数非法，未登录时也应先被鉴权拦截（返回 2113 而不是参数校验错误）")
     @pytest.mark.negative
     def test_get_demoday_live_auth_check_before_param_validation(self, api_client):
+        # pageSize 传 0（违反 schema minimum=1），但由于鉴权检查优先，
+        # 实测确认依然是 2113，而不是参数校验类错误码
         resp = get_demoday_live(api_client, page_no=1, page_size=0)
         body = resp.json()
 
@@ -84,9 +86,13 @@ class TestDemodayLiveSuccess:
             assert body["code"] == 0, f"预期获取成功，实际返回: {body}"
 
         data = body["data"]
+        # data 为空代表"当前没有正在讲解的项目"，属于合法业务状态；
+        # 有数据时校验关键字段类型是否符合预期
         if data is not None:
             with allure.step("有数据时校验关键字段类型"):
                 if data.get("id") is not None:
+                    # id 是 int64，后端可能序列化成字符串（精度保护，实测在
+                    # loginId 上确认过这个模式），这里同时容忍 int/字符串数字
                     assert isinstance(data["id"], (int, str))
                     assert int(data["id"]) > 0
                 if data.get("isRoadshowLive") is not None:
@@ -97,6 +103,7 @@ class TestDemodayLiveSuccess:
     @allure.story("参数超限")
     @allure.title("pageSize 传超出上限(101)应被参数校验拦截，不返回成功")
     def test_get_demoday_live_page_size_exceeds_max(self, authed_client):
+        # OpenAPI: pageSize maximum=100，这里故意传 101 验证边界校验生效
         resp = get_demoday_live(authed_client, page_no=1, page_size=101)
         body = resp.json()
 

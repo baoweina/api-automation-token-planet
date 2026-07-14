@@ -1,5 +1,8 @@
 """测试环境数据库直连工具（仅用于测试数据准备/断言，不是业务代码）。
 
+典型用途：邮箱验证码登录场景下，测试环境收不到/不方便解析真实邮件，
+直接从 nw_app_mail 表按发码接口返回的 sessionId（即该表的 id）读取验证码。
+
 数据库连接信息只从 .env 读取（DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME），
 不要硬编码到代码里，.env 已在 .gitignore 中排除，不会提交到 git。
 """
@@ -32,7 +35,11 @@ def _connect() -> pymysql.connections.Connection:
 def get_mail_code_by_session_id(
     session_id: str, *, retries: int = 5, interval_sec: float = 1.0
 ) -> str | None:
-    """按 sessionId（对应 nw_app_mail.id）查询邮箱验证码，带重试避免落库时序延迟。"""
+    """按 sessionId（对应 nw_app_mail.id）查询邮箱验证码。
+
+    发码接口落库可能存在极短暂的时序延迟，这里做几次轮询重试，
+    避免偶发查不到数据导致用例误报失败。
+    """
     for attempt in range(retries):
         conn = _connect()
         try:

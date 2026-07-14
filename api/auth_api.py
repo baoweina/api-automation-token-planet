@@ -1,6 +1,6 @@
 """登录注册模块相关接口封装。
 
-对应 OpenAPI 文档 tag: \"Exio home管理API_(WEB)\"
+对应 OpenAPI 文档 tag: "Exio home管理API_(WEB)"
 参考: openapi/wali_openapi.json -> paths./exio/user/login
 """
 from __future__ import annotations
@@ -15,7 +15,16 @@ USER_INFO_PATH = "/exio/user/info"
 
 
 def login(client: ApiClient, payload: dict) -> requests.Response:
-    """登录/注册接口。"""
+    """登录/注册接口。
+
+    payload 字段说明（详见 OpenAPI: APP用户登录请求信息）:
+        loginVerifyType: PASSWORD | CAPTCHA | THIRD_AUTH | PASSKEY | NONE
+        thirdAuthType:   Google | AppleID | Facebook（仅 THIRD_AUTH 需要）
+        thirdAuthToken:  第三方授权 token（仅 THIRD_AUTH 需要，需真实 Google 登录换取）
+        username:        email / phone
+        captcha/captchaType/sessionId: 验证码登录相关
+        action:           login 等
+    """
     return client.post(LOGIN_PATH, json=payload)
 
 

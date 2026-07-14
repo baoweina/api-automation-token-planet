@@ -10,3 +10,4 @@ EPIC = "接口自动化测试"
 
 FEATURE_LOGIN = "用户登录接口"
 FEATURE_HOME = "首页接口"
+FEATURE_VOTE_RECORD = "项目认筹记录接口"

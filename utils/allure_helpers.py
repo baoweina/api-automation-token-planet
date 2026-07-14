@@ -1,7 +1,9 @@
 """Allure 报告增强工具。
 
-- verify(): 把一组断言包装成带名字的 Allure step，并把期望/实际值作为附件记录。
-- attach_failure_snapshot(): 用例失败时，把最近一次请求/响应渲染成图片+JSON附加到报告。
+- verify(): 把一组断言包装成带名字的 Allure step，并把"期望值 vs 实际值"作为
+  附件记录下来，报告里能直接看到断言依据，不用去猜为什么失败。
+- attach_failure_snapshot(): 用例失败时，把最近一次接口调用的请求/响应渲染成一张
+  图片（模拟"截图"）+ JSON 文本，一起附加到 Allure 报告，方便不看代码也能定位问题。
 """
 from __future__ import annotations
 
@@ -18,7 +20,13 @@ from api.client import LastExchange, get_last_exchange
 
 @contextlib.contextmanager
 def verify(title: str, **expected_vs_actual: Any) -> Iterator[None]:
-    """包装断言并记录断言结果。"""
+    """包装断言并记录断言结果。
+
+    用法::
+
+        with verify("返回码应为 1100", expected=1100, actual=body["code"]):
+            assert body["code"] == 1100
+    """
     with allure.step(f"断言：{title}"):
         allure.attach(
             json.dumps(expected_vs_actual, ensure_ascii=False, indent=2, default=str),

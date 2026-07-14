@@ -8,7 +8,7 @@
   .env（GOOGLE_THIRD_AUTH_TOKEN），用例本身正常执行断言：
   只要 Google 登录没有成功（未配置 token / token 过期 / 校验不通过），
   该用例就判定为 FAILED，不做 skip 处理。
-- /exio/user/info（登录后查询用户信息）也归到“用户登录接口”这个 Feature 下，
+- /exio/user/info（登录后查询用户信息）也归到"用户登录接口"这个 Feature 下，
   因为它测的是登录态相关能力，不是一个独立业务模块。
 """
 from __future__ import annotations
@@ -97,6 +97,8 @@ class TestLoginNegative:
     @allure.title("缺少 Content-Language 请求头时应返回 1104 缺少必传header")
     @pytest.mark.negative
     def test_login_missing_content_language_header(self, api_client):
+        # ApiClient 默认会带上 Content-Language，这里用 requests 的约定
+        # （header 值传 None 表示本次请求不发送该 header）来复现"缺失"场景
         resp = api_client.post(
             "/exio/user/login",
             json=VALID_BASE_PAYLOAD,
@@ -274,6 +276,7 @@ class TestLoginThirdAuthGoogle:
         ):
             assert data["mail"] == settings.GOOGLE_LOGIN_USERNAME
         with verify("loginId 为正整数", expected=">0", actual=data["loginId"]):
+            # loginId 后端可能序列化成字符串（int64 精度保护），这里统一转 int 判断
             assert int(data["loginId"]) > 0
         with verify(
             "userRoleList 取值范围合法",
@@ -289,7 +292,7 @@ class TestLoginThirdAuthGoogle:
 @allure.parent_suite(EPIC)
 @allure.suite(FEATURE_LOGIN)
 class TestUserInfo:
-    """登录态查询用户信息（/exio/user/info），归属“用户登录接口”这个业务模块。"""
+    """登录态查询用户信息（/exio/user/info），归属"用户登录接口"这个业务模块。"""
 
     @allure.story("登录后查询用户信息成功")
     @allure.title("携带有效 Bearer Token 获取用户角色信息，响应结构应符合 OpenAPI 定义")

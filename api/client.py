@@ -1,4 +1,10 @@
-"""统一的 HTTP 客户端封装。"""
+"""统一的 HTTP 客户端封装。
+
+- 统一注入默认请求头、Base URL、超时时间
+- 每次请求自动把 请求/响应 以 Allure attachment 形式记录，报告里能直接看到接口细节
+- 记录"最近一次请求/响应"到模块级缓存，供 conftest.py 在用例失败时生成失败快照使用
+- 对外只暴露 get/post/put/delete 四个方法，业务接口封装（api/*.py）在此基础上组装
+"""
 from __future__ import annotations
 
 import json
@@ -13,6 +19,8 @@ from config.settings import settings
 
 @dataclass
 class LastExchange:
+    """最近一次请求/响应的快照，用于失败时生成截图附件。"""
+
     method: str
     url: str
     request_payload: dict
@@ -24,6 +32,7 @@ _last_exchange: LastExchange | None = None
 
 
 def get_last_exchange() -> LastExchange | None:
+    """获取当前进程内最近一次接口调用的请求/响应，测试失败时用来生成截图。"""
     return _last_exchange
 
 
